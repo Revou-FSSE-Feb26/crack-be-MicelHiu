@@ -1,3 +1,5 @@
+link postman = https://web.postman.co/workspace/My-Workspace~81e0c73e-d1bb-4654-88ad-474f2802ca1a/collection/56609845-9733df1d-ec67-4e68-b8df-a382e6622d8c?action=share&source=copy-link&creator=56609845
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
