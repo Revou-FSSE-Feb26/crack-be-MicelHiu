@@ -1,6 +1,6 @@
 CREATE TYPE users_role as ENUM (
     'admin',
-    'guest'
+    'user'
 );
 
 CREATE TYPE rooms_type as ENUM (
@@ -13,7 +13,7 @@ CREATE TYPE booking_status as ENUM (
     'ongoing',
     'canceled',
     'completed'
-)
+);
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE users (
 	role users_role NOT NULL,
     points integer NOT NULL,
 	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE rooms (
 	id varchar PRIMARY KEY UNIQUE,
@@ -35,7 +35,7 @@ CREATE TABLE rooms (
 	image varchar NOT NULL,
 	type rooms_type NOT NULL,
 	stock integer NOT NULL
-)
+);
 
 CREATE TABLE discounts (
 	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -45,9 +45,9 @@ CREATE TABLE discounts (
 	valid_until timestamp NOT NULL,
 	created_at timestamp NOT NULL DEFAULT current_timestamp,
 	is_active boolean NOT NULL
-)
+);
 
-CREATE TABLE cart (
+CREATE TABLE carts (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	room_id varchar NOT NULL REFERENCES rooms(id) ON DELETE RESTRICT,
@@ -59,9 +59,31 @@ CREATE TABLE cart (
 	time_end time NOT NULL,
 	total_price numeric(12,2) NOT NULL,
 	created_at timestamp NOT NULL
-)
+);
 
+CREATE TABLE bookings (
+	code varchar PRIMARY KEY,
+	user_id UUID NOT NULL REFERENCES users(id),
+	room_id varchar NOT NULL REFERENCES rooms(id),
+	guest_name varchar NOT NULL,
+	guest_contact VARCHAR NOT NULL,
+	time_start time NOT NULL,
+	time_end time NOT NULL,
+	date_play date NOT NULL,
+	unit_price numeric(12,2) NOT NULL,
+	discount_id uuid REFERENCES discounts(id),
+	discount_value numeric(12,2),
+	quantity integer NOT NULL,
+	total_price numeric(12,2) NOT NULL,
+	status booking_status NOT NULL,
+	created_at timestamp NOT NULL DEFAULT current_timestamp
+);
 
-
-
-
+CREATE TABLE visitors (
+	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	booking_code varchar NOT NULL REFERENCES bookings(code),
+	user_id uuid,
+	guest_name varchar NOT NULL,
+	checked_in timestamp NOT NULL,
+	created_at timestamp NOT NULL DEFAULT current_timestamp
+);
