@@ -7,7 +7,8 @@ export class UsersRepository {
 
     getUserById(id: string) {
         return this.prisma.users.findUnique({
-            where: {id}
+            where: {id},
+            omit: {password: true},
         });
     }
 }
