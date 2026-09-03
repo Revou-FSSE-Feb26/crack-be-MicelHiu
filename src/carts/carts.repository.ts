@@ -25,12 +25,13 @@ export class CartsRepository {
                 name: true, 
                 price: true, 
                 type: true, 
-                image: true
+                image: true,
+                stock: true
             }
         });
     }
 
-    createCart(dto: CreateCartDto, newStock: number) {
+    createCart(dto: CreateCartDto) {
         this.prisma.carts.create({
             data: dto,
             include: {
@@ -44,32 +45,22 @@ export class CartsRepository {
                     }
                 }
             }
-        }),
-        this.prisma.rooms.update({
-            where: {
-                id: dto.room_id,
-            },
-            data: {
-                stock: newStock,
-            }
         });
     }
 
-    updateCart(dto: UpdateCartDto, id: string, newStock: number, room_id: string) {
+    updateCart(dto: UpdateCartDto, id: string) {
         this.prisma.carts.update({
             where: { id },
             data: dto,
             include: {
                 rooms: { select: {name: true, stock: true} }
             }
-        }),
-        this.prisma.rooms.update({
-            where: {
-                id: room_id,
-            },
-            data: {
-                stock: newStock,
-            }
         });
+    }
+
+    async deleteCart(id: string, userId: string) {
+        return this.prisma.carts.delete({
+            where: {id, user_id: userId}
+        })
     }
 }
