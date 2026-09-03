@@ -31,8 +31,8 @@ export class CartsRepository {
         });
     }
 
-    createCart(dto: CreateCartDto) {
-        this.prisma.carts.create({
+    createCart(dto: CreateCartDto & {user_id: string}) {
+        return this.prisma.carts.create({
             data: dto,
             include: {
                 rooms: {
@@ -49,7 +49,7 @@ export class CartsRepository {
     }
 
     updateCart(dto: UpdateCartDto, id: string) {
-        this.prisma.carts.update({
+        return this.prisma.carts.update({
             where: { id },
             data: dto,
             include: {

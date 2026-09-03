@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CartsRepository } from './carts.repository';
 import { CreateCartDto } from './dto/create-cart.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
 
 @Injectable()
 export class CartsService {
@@ -18,7 +19,10 @@ export class CartsService {
     }
 
     async createCart(dto: CreateCartDto, userId: string) {
-        const room = await this.cartsRepository.getRoomById(dto.room_id);
+        const roomId = dto.room_id;
+        if (!roomId) throw new NotFoundException('Room not found');
+
+        const room = await this.cartsRepository.getRoomById(roomId);
         if(!room) throw new NotFoundException('Room not found');
 
         if(room.stock < 1) throw new NotFoundException('Room is out of stock');
@@ -26,11 +30,14 @@ export class CartsService {
         return this.cartsRepository.createCart({...dto, user_id: userId});
     }
 
-    async updateCart(dto: CreateCartDto, id: string, userId: string) {
+    async updateCart(dto: UpdateCartDto, id: string, userId: string) {
         const oldCart = await this.cartsRepository.getCartById(id, userId);
         if(!oldCart) throw new NotFoundException('Cart not found');
 
-        const room = await this.cartsRepository.getRoomById(dto.room_id);
+        const roomId = dto.room_id;
+        if (!roomId) throw new NotFoundException('Room not found');
+
+        const room = await this.cartsRepository.getRoomById(roomId);
         if(!room) throw new NotFoundException('Room not found');
 
         if(room.stock < 1) throw new NotFoundException('Room is out of stock');
