@@ -4,12 +4,21 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth-guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+import { RolesGuard } from 'src/auth/roles-guard';
+import { Roles } from 'src/auth/roles-decorator';
 
 @UseGuards(JwtAuthGuard)
 @Controller('carts')
 export class CartsController {
   constructor(private readonly cartsService: CartsService) {}
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   @Get()
+  getAdminCarts(@CurrentUser() user: {id: string}) {
+    return this.cartsService.getAdminCarts();
+  }
+
+  @Get('current')
   getAllCarts(@CurrentUser() user: {id: string}) {
     return this.cartsService.getAllCarts(user.id);
   }
