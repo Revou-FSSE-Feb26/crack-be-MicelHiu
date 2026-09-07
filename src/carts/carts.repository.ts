@@ -7,6 +7,10 @@ import { Decimal } from "@prisma/client/runtime/index-browser";
 @Injectable()
 export class CartsRepository {
     constructor(private readonly prisma: PrismaService) {}
+    private toTimeDate(time: string): Date {
+        return new Date(`1970-01-01T${time}:00.000Z`);
+    }
+
     getAdminCarts(){
         return this.prisma.carts.findMany();
     }
@@ -34,10 +38,6 @@ export class CartsRepository {
                 stock: true
             }
         });
-    }
-
-    private toTimeDate(time: string): Date {
-        return new Date(`1970-01-01T${time}:00.000Z`);
     }
 
     createCart(dto: Omit<CreateCartDto, 'time_start' | 'time_end'> & {
