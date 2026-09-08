@@ -9,7 +9,7 @@ import { booking_status } from "generated/prisma/enums";
 export class BookingRepository {
     constructor(private readonly prisma: PrismaService) {}
     private toTimeDate(time: string): Date {
-        return new Date(`1970-01-01T${name}:00.000Z`);
+        return new Date(`1970-01-01T${time}:00.000Z`);
     }
 
     getCustomerBookings() {
