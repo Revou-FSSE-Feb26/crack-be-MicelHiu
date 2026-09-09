@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BookingRepository } from './bookings.repository';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { CartsRepository } from 'src/carts/carts.repository';
+import { Decimal } from '@prisma/client/runtime/index-browser';
+import { booking_status } from 'generated/prisma/enums';
 
 @Injectable()
 export class BookingsService {
-    constructor(private readonly bookingsRepository: BookingRepository) {}
+    constructor(
+        private readonly bookingsRepository: BookingRepository,
+        private readonly cartsRepository: CartsRepository
+    ) {}
     private formatTime(date: Date): string {
         return date.toISOString().substring(11, 19);
     }
@@ -13,8 +18,8 @@ export class BookingsService {
     private mapBooking(booking: any) {
         return {
             ...booking,
-            time_start: this.formatTime(booking.time_start),
-            time_end: this.formatTime(booking.time_end)
+            time_start: booking.time_start.toISOString().substring(11, 16);
+            time_end: this.formatTime(booking.time_end )
         };
     }
 
@@ -44,8 +49,34 @@ export class BookingsService {
     2. generate code booking
     3. panggil repository create */
     async createBooking(userId: string, dto: CreateBookingDto) {
-        const cart = await this.cartsRepository.getCartById(dto.cart_id, userId);
-        if(!cart) throw new NotFoundException('Cart not found');
-        
+        // 1. Ambil cart yang mau di-checkout, harus punya user ini
+        const cart = await this.cartsRepository.getCartById(dto.cart_id, userId );
+        if (!cart) throw new NotFoundException('Cart not found');
+
+        // 2. Generate kode booking unik
+        const code = this.generateBookingCode();
+
+        // 3. Buat booking dari data cart + guest info dari popup
+        const booking = await this.bookingsRepository.createBooking({
+            code,
+            user_id: userId,
+            room_id: cart.room_id,
+            guest_name: dto.guest_name,
+            guest_contact: dto.guest_contact,
+            unit_price: cart.total_price.div(cart.quantity), // harga per unit dari total cart
+            quantity: cart.quantity,
+            total_price: cart.total_price,
+            date_play: cart.date_play,
+            time_start: this.formatTime(cart.time_start),
+            time_end: this.formatTime(cart.time_end),
+            discount_id: cart.discount_id ?? undefined,
+            discount_value: cart.discount_value ?? undefined,
+            status: 'confirmed',
+        });
+
+        // 4. Cart sudah "dipindah" jadi booking → hapus dari cart
+        await this.cartsRepository.deleteCart(dto.cart_id, userId);
+
+        return this.mapBooking(booking);
     }
 }

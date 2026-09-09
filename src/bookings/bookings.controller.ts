@@ -4,6 +4,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth-guard';
 import { RolesGuard } from 'src/auth/roles-guard';
 import { Roles } from 'src/auth/roles-decorator';
 import { CurrentUser } from 'src/auth/current-user.decorator';
+import { CreateBookingDto } from './dto/create-booking.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('bookings')
@@ -18,12 +19,12 @@ export class BookingsController {
 
   @Get('current')
   getAllBookings(@CurrentUser() user: {id: string}) {
-    return this.bookingsService.getAllCarts(user.id);
+    return this.bookingsService.getAllBookings(user.id);
   }
 
   @Get(':id')
-  getBookingsDetail(@CurrentUser() user: {id: string}, @Param('id') id: string) {
-    return this.bookingsService.getBookingsDetail(user.id, id);
+  getBookingDetail(@CurrentUser() user: {id: string}, @Param('id') id: string) {
+    return this.bookingsService.getBookingDetail(user.id, id);
   }
 
   @Post()

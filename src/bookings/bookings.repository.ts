@@ -4,10 +4,11 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CreateBookingDto } from "./dto/create-booking.dto";
 import { Decimal } from "@prisma/client/runtime/index-browser";
 import { booking_status } from "generated/prisma/enums";
+import { CartsRepository } from "src/carts/carts.repository";
 
 @Injectable()
 export class BookingRepository {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService, private readonly cartsRepository: CartsRepository,) {}
     private toTimeDate(time: string): Date {
         return new Date(`1970-01-01T${time}:00.000Z`);
     }
@@ -33,7 +34,7 @@ export class BookingRepository {
         })
     }
 
-    createBooking(dto: CreateBookingDto & {
+    createBooking(dto: Omit<CreateBookingDto, 'cart_id'> & {
         code: string;
         user_id: string;
         room_id: string;

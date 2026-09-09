@@ -10,6 +10,6 @@ import { CartsRepository } from 'src/carts/carts.repository';
 @Module({
   imports: [PrismaModule, AuthModule, CartsModule],
   controllers: [BookingsController],
-  providers: [BookingsService, BookingRepository, CartsRepository],
+  providers: [BookingsService, BookingRepository],
 })
 export class BookingsModule {}
