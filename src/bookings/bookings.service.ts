@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { BookingRepository } from './bookings.repository';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { CartsRepository } from 'src/carts/carts.repository';
 import { Decimal } from '@prisma/client/runtime/index-browser';
 import { booking_status } from 'generated/prisma/enums';
+import { UpdateBookingDto } from './dto/update-booking.dto';
+import { identity } from 'rxjs';
 
 @Injectable()
 export class BookingsService {
@@ -11,15 +13,20 @@ export class BookingsService {
         private readonly bookingsRepository: BookingRepository,
         private readonly cartsRepository: CartsRepository
     ) {}
-    private formatTime(date: Date): string {
-        return date.toISOString().substring(11, 19);
+    private toTimeDate(date: Date): string {
+        return date.toISOString().substring(11, 16);
+    }
+
+    private formatTime(time: Date | string): string {
+        if (time instanceof Date) return this.toTimeDate(time);
+        return time.substring(0, 5);
     }
 
     private mapBooking(booking: any) {
         return {
             ...booking,
-            time_start: booking.time_start.toISOString().substring(11, 16);
-            time_end: this.formatTime(booking.time_end )
+            time_start: this.toTimeDate(booking.time_start),
+            time_end: this.toTimeDate(booking.time_end),
         };
     }
 
@@ -78,5 +85,32 @@ export class BookingsService {
         await this.cartsRepository.deleteCart(dto.cart_id, userId);
 
         return this.mapBooking(booking);
+    }
+
+    private readonly validTransactions: Record<booking_status, booking_status[]> = {
+        confirmed: ['ongoing', 'canceled'],
+        ongoing: ['completed'],
+        completed: [],
+        canceled: [],
+    };
+
+    async updateBooking(code: string, userId: string, dto: UpdateBookingDto) {
+        const existing = await this.bookingsRepository.getBookingDetails(code, userId);
+        if(!existing) throw new NotFoundException('Booking not found');
+
+        if(dto.status && dto.status !== existing.status) {
+            const allowedNext = this.validTransactions[existing.status];
+            if(!allowedNext.includes(dto.status)) {
+                throw new BadRequestException(`Cannot change status from '${existing.status}' to '${dto.status}'`)
+            };
+        }
+
+        const updated = await this.bookingsRepository.updateBooking(code, {
+            ...(dto.guest_name && { guest_name: dto.guest_name }),
+            ...(dto.guest_contact && { guest_contact: dto.guest_contact }),
+            ...(dto.status && { status: dto.status }),
+        });
+
+        return this.mapBooking(updated);
     }
 }

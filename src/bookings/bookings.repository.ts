@@ -5,6 +5,7 @@ import { CreateBookingDto } from "./dto/create-booking.dto";
 import { Decimal } from "@prisma/client/runtime/index-browser";
 import { booking_status } from "generated/prisma/enums";
 import { CartsRepository } from "src/carts/carts.repository";
+import { UpdateBookingDto } from "./dto/update-booking.dto";
 
 @Injectable()
 export class BookingRepository {
@@ -66,5 +67,32 @@ export class BookingRepository {
                 }
             }
         });
+    }
+
+    getBookingById(code: string) {
+        return this.prisma.bookings.findUnique({
+            where: { code }
+        });
+    }
+
+    updateBooking(code: string, data: Partial<{
+        guest_name: string;
+        guest_contact: string;
+        status: booking_status;
+    }>) {
+        return this.prisma.bookings.update({
+            where: { code },
+            data,
+            include: {
+                rooms: {
+                    select: {
+                        name: true,
+                        price: true,
+                        type: true,
+                        image: true,
+                    }
+                }
+            }
+        })
     }
 }
