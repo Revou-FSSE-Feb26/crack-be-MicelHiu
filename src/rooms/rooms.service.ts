@@ -9,8 +9,8 @@ export class RoomsService {
     return this.roomsRepository.getAllRooms();
   }
 
-  getRoomById(id: string) {
-    const room = this.roomsRepository.getRoomById(id);
+  async getRoomById(id: string) {
+    const room = await this.roomsRepository.getRoomById(id);
     if(!room) throw new NotFoundException("Room Not Found");
     return room;
   }
