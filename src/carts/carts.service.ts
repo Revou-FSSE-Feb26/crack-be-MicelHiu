@@ -80,14 +80,26 @@ export class CartsService {
         const oldCart = await this.cartsRepository.getCartById(id, userId);
         if(!oldCart) throw new NotFoundException('Cart not found');
 
-        const roomId = dto.room_id;
-        if (!roomId) throw new NotFoundException('Room not found');
+        let room: Awaited<ReturnType<CartsRepository['getRoomById']>> | null = oldCart.rooms ?? null;
+        if(dto.room_id) {
+            room = await this.cartsRepository.getRoomById(dto.room_id);
+            if(!room) throw new NotFoundException('Room not found');
+        }
 
-        const room = await this.cartsRepository.getRoomById(roomId);
-        if(!room) throw new NotFoundException('Room not found');
-        if(room.stock < 1) throw new NotFoundException('Room is out of stock');
+        if(room && room.stock < 1) throw new NotFoundException('Room is out of stock');
 
-        const cart = await this.cartsRepository.updateCart(dto, id);
+        const timeStart = dto.time_start ?? this.formatTime(oldCart.time_start);
+        const timeEnd = dto.time_end ?? this.formatTime(oldCart.time_end);
+        const quantity = dto.quantity ?? oldCart.quantity;
+        const discountValue = dto.discount_value ?? oldCart.discount_value ?? undefined;
+
+        const durationHours = this.calculateDurationHours(timeStart, timeEnd);
+        const totalPrice = room ? this.calculateTotalPrice(room.price, durationHours, quantity, discountValue) : oldCart.total_price;
+
+        const cart = await this.cartsRepository.updateCart(
+            {...dto, total_price: totalPrice},
+            id,
+        );
         return this.mapCart(cart);
     }
 
